@@ -1,0 +1,65 @@
+name: Playwright Tosca Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      tosca_base_url:
+        description: 'Tosca Cloud base URL (no trailing slash). Defaults to the TOSCA_BASE_URL repo variable.'
+        required: false
+      tosca_space:
+        description: 'Tosca Cloud space/workspace id. Defaults to the TOSCA_SPACE repo variable.'
+        required: false
+
+# Tosca Cloud's "Run GitHub Workflow" module dispatches without inputs, so the
+# tenant and space normally come from repository variables.
+env:
+  TOSCA_BASE_URL: ${{ inputs.tosca_base_url || vars.TOSCA_BASE_URL }}
+  TOSCA_SPACE: ${{ inputs.tosca_space || vars.TOSCA_SPACE }}
+
+jobs:
+  test-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        continue-on-error: true
+
+      - name: Upload results to Tosca Cloud
+        run: >
+          node upload.mjs
+          --base "$TOSCA_BASE_URL"
+          --space "$TOSCA_SPACE"
+          --clientId "$TOSCA_CLIENT_ID"
+          --clientSecret "$TOSCA_CLIENT_SECRET"
+          --junit results.xml
+          --zip blob-report/report.zip
+        env:
+          TOSCA_CLIENT_ID: ${{ secrets.TOSCA_CLOUD_CLIENT_ID }}
+          TOSCA_CLIENT_SECRET: ${{ secrets.TOSCA_CLOUD_CLIENT_SECRET }}
+
+      - name: Publish JUnit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: |
+            results.xml
+            blob-report/report.zip
+            playwright-report/**
+          retention-days: 14
