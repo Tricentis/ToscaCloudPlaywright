@@ -106,7 +106,11 @@ client id and secret for a short-lived access token on every run.
 
 ### Setup
 
-1. **Fork or copy this repo** into your own GitHub account or organization.
+1. **Fork or copy this repo** into your own GitHub account or organization. The workflow
+   runs on `ubuntu-stepsecurity-x64`, a runner that's only available inside the Tricentis
+   GitHub enterprise. Anywhere else, change `runs-on` in
+   [`.github/workflows/playwright-tosca.yml`](.github/workflows/playwright-tosca.yml) to a
+   runner you can use, e.g. `ubuntu-latest`, or the run waits for a runner that never picks it up.
 2. **Add repository secrets** under **Settings → Secrets and variables → Actions → Secrets**:
    - `TOSCA_CLOUD_CLIENT_ID` — the client id from above
    - `TOSCA_CLOUD_CLIENT_SECRET` — the client secret from above
@@ -117,7 +121,7 @@ client id and secret for a short-lived access token on every run.
 4. **Add the Run GitHub Workflow module to a test case.** In Tosca Cloud, add **Run GitHub Workflow**
    (under **Standard objects → Automation tools modules → GitHub**) to a test case and fill in:
    - the repository path, e.g. `<your-org>/<your-repo>`
-   - the workflow path: `.github/workflows/playwright-tosca.yml`
+   - the workflow file name: `playwright-tosca.yml`
    - your GitHub personal access token
 5. **Run the test case.** The workflow run appears under your repo's **Actions** tab, and
    once it finishes, the Playwright results show up in the Tosca Cloud runs viewer.
@@ -139,6 +143,7 @@ node upload.mjs --base "https://<your-tenant>.my.tricentis.com" --space "<worksp
 | Error | Cause & fix |
 | --- | --- |
 | Run GitHub Workflow fails with 401 | The personal access token is wrong or expired. Create a new one and update it in the module. |
-| Run GitHub Workflow fails with 403 or 404 | The token lacks the **Actions: Read and write** permission on the repo, or the repository path or workflow path in the module doesn't match your repo. |
-| Workflow runs but no upload | The `TOSCA_CLOUD_CLIENT_ID` / `TOSCA_CLOUD_CLIENT_SECRET` secrets are missing on your repo. See Setup step 2. |
+| Run GitHub Workflow fails with 403 or 404 | The token can't access the repo or lacks the **Actions: Read and write** permission. Check its resource owner, its repository access, and whether it's still pending approval by your organization. Also check the repository and workflow file name in the module. |
+| Workflow run stays queued, or is canceled before any step runs | The runner in `runs-on` isn't available to your repo or is blocked by your organization's policy. See Setup step 1. |
+| Upload step fails with `Missing required arguments` | The secrets or variables aren't set, or aren't set as repository-level Actions secrets and variables. See Setup steps 2 and 3. |
 | Nothing shows up in the runs viewer | Check that the `TOSCA_BASE_URL` / `TOSCA_SPACE` variables match the tenant and workspace you're looking at. Also check the upload step in the GitHub Actions run log: a 401 usually means the client id/secret is wrong or missing the `tta` scope; a 404 usually means Playwright run uploads aren't enabled for that workspace yet. |
