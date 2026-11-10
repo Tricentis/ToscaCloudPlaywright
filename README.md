@@ -147,3 +147,13 @@ node upload.mjs --base "https://<your-tenant>.my.tricentis.com" --space "<worksp
 | Workflow run stays queued, or is canceled before any step runs | The runner in `runs-on` isn't available to your repo or is blocked by your organization's policy. See Setup step 1. |
 | Upload step fails with `Missing required arguments` | The secrets or variables aren't set, or aren't set as repository-level Actions secrets and variables. See Setup steps 2 and 3. |
 | Nothing shows up in the runs viewer | Check that the `TOSCA_BASE_URL` / `TOSCA_SPACE` variables match the tenant and workspace you're looking at. Also check the upload step in the GitHub Actions run log: a 401 usually means the client id/secret is wrong or missing the `tta` scope; a 404 usually means Playwright run uploads aren't enabled for that workspace yet. |
+
+## Contributions
+
+This repository doesn't accept external contributions: please don't open issues or pull
+requests. You're welcome to fork it and adapt it under the terms of the license.
+To report a security vulnerability, see [`SECURITY.md`](SECURITY.md).
+
+## License
+
+[Apache License 2.0](LICENSE)
