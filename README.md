@@ -1,5 +1,9 @@
 # Demo Web Shop E2E Suite
 
+> [!NOTE]
+> This is a sample, not an officially supported Tricentis product. It comes with no support
+> and no SLA. Use it at your own risk.
+
 Playwright regression suite covering the 20 most critical user flows on
 [demowebshop.tricentis.com](https://demowebshop.tricentis.com/), wired up so a
 Tosca Cloud test case can trigger it and get the Playwright results back into the
