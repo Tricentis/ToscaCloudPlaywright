@@ -142,6 +142,27 @@ results to Tosca Cloud with:
 node upload.mjs --base "https://<your-tenant>.my.tricentis.com" --space "<workspace-id>" --clientId "<client-id>" --clientSecret "<client-secret>" --junit results.xml --zip blob-report/report.zip
 ```
 
+### Report data, size and retention
+
+> [!WARNING]
+> Playwright traces, screenshots and videos can contain secrets and personal data from the
+> system under test, such as typed passwords, cookies, tokens in request headers, and
+> customer data shown on the page. They're uploaded to Tosca Cloud, where anyone with access
+> to the workspace can open them. The workflow also keeps them as the `playwright-results`
+> artifact in GitHub Actions for 14 days. Run the tests with dedicated test accounts and test
+> data, and adjust `trace`, `screenshot` and `video` in
+> [`playwright.config.ts`](playwright.config.ts) or `retention-days` in the workflow if needed.
+
+- **Size limit:** Tosca Cloud accepts report zips up to 200 MB. A larger report doesn't open
+  in the runs viewer. This suite only keeps traces, screenshots and videos for failed tests
+  (`retain-on-failure` / `only-on-failure`). If your own suite grows past the limit, keep
+  that setting and reduce retries or the number of tests per run.
+- **One upload per run:** each upload URL accepts a single upload and expires after 15 minutes.
+  `upload.mjs` uploads right after it gets the URL, so this only matters for your own
+  pipeline scripts. To upload again, run `upload.mjs` again: it creates a new run.
+- **Retention:** deleting a run in Tosca Cloud also deletes its Playwright report. Otherwise
+  the report is kept for the same retention period as the run.
+
 ### Troubleshooting
 
 | Error | Cause & fix |
@@ -151,6 +172,8 @@ node upload.mjs --base "https://<your-tenant>.my.tricentis.com" --space "<worksp
 | Workflow run stays queued, or is canceled before any step runs | The runner in `runs-on` isn't available to your repo or is blocked by your organization's policy. See Setup step 1. |
 | Upload step fails with `Missing required arguments` | The secrets or variables aren't set, or aren't set as repository-level Actions secrets and variables. See Setup steps 2 and 3. |
 | Nothing shows up in the runs viewer | Check that the `TOSCA_BASE_URL` / `TOSCA_SPACE` variables match the tenant and workspace you're looking at. Also check the upload step in the GitHub Actions run log: a 401 usually means the client id/secret is wrong or missing the `tta` scope; a 404 usually means Playwright run uploads aren't enabled for that workspace yet. |
+| The run shows up, but its Playwright report doesn't open | The report zip is larger than 200 MB. Check the size of `blob-report/report.zip` and reduce it. See [Report data, size and retention](#report-data-size-and-retention). |
+| Upload step fails with `PUT upload failed` | The upload URL expired after 15 minutes or was already used. Run `upload.mjs` again: it requests a new upload URL. |
 
 ## Contributions
 
